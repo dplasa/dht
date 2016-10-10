@@ -11,9 +11,9 @@ void setup()
 
 void loop()
 {
-  unsigned long b = micros();
-  uint8_t chk = DHT.read();
-  unsigned long e = micros();
+  uint32_t b = micros();
+  dht::ReadStatus chk = DHT.read();
+  uint32_t e = micros();
 
   Serial.print(F("\nRead sensor: "));
   switch (chk)
@@ -51,7 +51,7 @@ void loop()
   Serial.print(F("Dew Point (°C): "));
   Serial.println(DHT.dewPoint());
 
-  delay(1000);
+  delay(5000);
 }
 //
 // END OF FILE
