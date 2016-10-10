@@ -20,7 +20,7 @@ void loop()
   Serial.print(F("Temperature (°C): "));
   Serial.println(DHT.getTemperature()/10);
 
-  delay(1000);
+  delay(5000);
 }
 //
 // END OF FILE
