@@ -13,7 +13,7 @@ void setup()
 void loop()
 {
   unsigned long b = micros();
-  uint8_t chk = DHT.read();
+  dht::ReadStatus chk = DHT.read();
   unsigned long e = micros();
 
   Serial.print(F("\nRead sensor: "));
