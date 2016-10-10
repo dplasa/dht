@@ -52,7 +52,7 @@ void loop()
   Serial.print(F("Dew Point (°C): "));
   Serial.println(DHT.dewPoint());
 
-  delay(1000);
+  delay(5000);
 }
 //
 // END OF FILE
