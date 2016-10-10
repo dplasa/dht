@@ -12,7 +12,7 @@ void setup()
 
 void loop()
 {
-  uint8_t chk = DHT.read();
+  DHT.read();
 
   Serial.print(F("Humidity (%): "));
   Serial.println(DHT.getHumidity()/10);
