@@ -1,0 +1,28 @@
+#######################################
+# Syntax Coloring Map LowPower
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+dth	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+read		KEYWORD2
+dewPoint	KEYWORD2
+getTemperature	KEYWORD2
+getHumidity	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+OK 	LITERAL1
+ERROR_CHECKSUM LITERAL1
+ERROR_TIMEOUT LITERAL1
+ERROR_CONNECT LITERAL1
+ERROR_ACKL LITERAL1
+ERROR_ACKH LITERAL1
