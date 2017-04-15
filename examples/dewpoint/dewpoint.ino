@@ -1,3 +1,7 @@
+//
+// This example compares a precise and a sloppy method
+// of calculating the dew point
+//
 void setup()
 {
   Serial.begin(9600);
@@ -56,4 +60,3 @@ void loop()
 //
 // END OF FILE
 //
-

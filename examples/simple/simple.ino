@@ -1,3 +1,7 @@
+//
+// Simple sensor readout example
+//
+
 #include <Wire.h>
 #include <dht.h>
 
@@ -25,4 +29,3 @@ void loop()
 //
 // END OF FILE
 //
-

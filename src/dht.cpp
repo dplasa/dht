@@ -15,7 +15,7 @@
 #include <Arduino.h>
 #include <Wire.h>
 
-dht::ReadStatus dht::read() 
+dht::ReadStatus dht::read()
 {
     ReadStatus res = OK;
 
@@ -72,7 +72,7 @@ float dht::dewPoint() const
 dht::ReadStatus dht::_checksum()
 {
     uint8_t sum = bits[0] + bits[1] + bits[2] + bits[3];
-    if (bits[4] != sum) 
+    if (bits[4] != sum)
         return ERROR_CHECKSUM;
     return OK;
 }
@@ -80,7 +80,7 @@ dht::ReadStatus dht::_checksum()
 dht::ReadStatus dht1wire::_storeData()
 {
     if (DHT11 == model)
-    {     
+    {
         // these bits are always zero, masking them reduces errors.
         bits[0] &= 0x7F;
         bits[2] &= 0x7F;
@@ -100,7 +100,7 @@ dht::ReadStatus dht1wire::_storeData()
         // these bits are always zero, masking them reduces errors.
         bits[0] &= 0x03;
         bits[2] &= 0x83;
-        
+
         // CONVERT AND STORE
         humidity = (bits[0]*256 + bits[1]);
         temperature = ((bits[2] & 0x7F)*256 + bits[3]);
@@ -113,7 +113,7 @@ dht::ReadStatus dht1wire::_storeData()
 dht::ReadStatus dht12::_storeData()
 {
     if (DHT12 == model)
-    {     
+    {
         // CONVERT AND STORE
         temperature = bits[2]*10 +bits[3];
         humidity = bits[0]*10 + bits[1];
@@ -236,7 +236,7 @@ dht::ReadStatus dht1wire::_readSensor(uint8_t wakeupDelay, uint8_t leadingZeroBi
 }
 
 
-dht12::dht12(uint8_t id) : 
+dht12::dht12(uint8_t id) :
     dht(id, dht::DHT12)
 {
     Wire.begin();

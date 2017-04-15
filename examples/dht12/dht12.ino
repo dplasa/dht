@@ -1,3 +1,7 @@
+//
+// Example for a DHT12 sensor
+//
+
 #include <Wire.h>
 #include <dht.h>
 
@@ -51,7 +55,7 @@ void loop()
   Serial.print(F("Dew Point (°C): "));
   Serial.println(DHT.dewPoint());
 
-  delay(5000);
+  delay(1000);
 }
 //
 // END OF FILE

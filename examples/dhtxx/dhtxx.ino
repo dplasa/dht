@@ -1,3 +1,7 @@
+//
+// Example for a DHT11 sensor
+//
+
 #include <Wire.h>
 #include <dht.h>
 
@@ -57,4 +61,3 @@ void loop()
 //
 // END OF FILE
 //
-
