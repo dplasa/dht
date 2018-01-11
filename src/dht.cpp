@@ -157,7 +157,7 @@ dht::ReadStatus dht1wire::_readSensor(uint8_t wakeupDelay, uint8_t leadingZeroBi
     // direct port read is about 3x faster
     uint8_t bit = digitalPinToBitMask(pin);
     uint8_t port = digitalPinToPort(pin);
-    volatile uint8_t *PIR = portInputRegister(port);
+    volatile uint32_t *PIR = portInputRegister(port);
 
     // START READOUT
     pinMode(pin, OUTPUT);
