@@ -155,9 +155,9 @@ dht::ReadStatus dht1wire::_readSensor(uint8_t wakeupDelay, uint8_t leadingZeroBi
     // replace digitalRead() with Direct Port Reads.
     // reduces footprint ~100 bytes => portability issue?
     // direct port read is about 3x faster
-    uint8_t bit = digitalPinToBitMask(pin);
-    uint8_t port = digitalPinToPort(pin);
-    volatile uint32_t *PIR = portInputRegister(port);
+    auto bit = digitalPinToBitMask(pin);
+    auto port = digitalPinToPort(pin);
+    auto PIR = portInputRegister(port);
 
     // START READOUT
     pinMode(pin, OUTPUT);
