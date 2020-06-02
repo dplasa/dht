@@ -1,12 +1,13 @@
 /*
  * dht.h
  *
- * Version 0.52
+ * Version 0.61
  *
  * DHTxx Temperature and humidity sensor library for Arduino.
  *
  * See http://playground.arduino.cc/main/DHT11Lib 
  * See http://playground.arduino.cc/main/DHTLib 
+ * See https://www.mischianti.org/2019/01/01/dht12-library-en/
  *
  * License:   GPL v3 (http://www.gnu.org/licenses/gpl.html)
  * Datasheet: http://www.micro4you.com/files/sensor/DHT11.pdf
@@ -32,20 +33,34 @@
  *       * Added more comments
  *   - Daniel Plasa                             - Version 0.52 (13/09/2016)
  *      * Merged in a dew point function
- *      * Merged in  code from DHTlib for DHT22,33,44 ...
+ *      * Merged in code from DHTlib for DHT22,33,44 ...
  *      * Merged in code from https://github.com/Bobadas/DHT12_library_Arduino
  *        for DHT12 (I2C communication) support
-*/
+ *                                              - Version 0.60 (27/04/2020)
+ *      * Merged in code from https://www.mischianti.org/2019/01/01/dht12-library-en/
+ *        and from https://github.com/EngDial/AM2320/
+ *        for DHT12/AM2320 support
+ *                                              - Version 0.61 (02/06/2020)
+ *      * float data types on esp8266
+ *      * auto-detect DHT12/AM2320 feature
+ */
 
 #ifndef dht_xx_h
 #define dht_xx_h
 
 #include <stdint.h>
 
+#if (defined ESP8266)
+#define RETURNTYPE float           // use float on esp8266
+#else
+#define RETURNTYPE int16_t         // use integer Value*10 as return
+#endif
+
 /*
  * dht
  *
- * A base class that modes a DHTxx humidity/temperature sensor.
+ * A base class that modes a DHTxx or AMD2320 humidity/temperature sensors
+ * 
  */
 class dht {
 public:
@@ -60,32 +75,46 @@ public:
         ERROR_UNKNOWN,
     };
 
-    // An enumeration modeling the model of the sensor.
+    // An enumeration for the model of the sensor.
     enum dhtmodels {
+	    DHTNONE,
+        DHTDUMMY,
         DHT11, 
         DHT22, 
         DHT33, 
         DHT44,
         DHT12,
+        AM2320
     };
 
     /*
      * dht
      *
      * Constructs a new object that communicates with a DHTxx sensor
-     * over the given pin: DHT11, 22, 33 and 44 can be used that way.
+     * over the given pin: DHT11, 22, 33 and 44 can be used that way
+     * using the derived class dht1wire
+     * 
      */
-    dht(uint8_t _Pin, dhtmodels _Model) : 
-      humidity(-1), temperature(-1), pin(_Pin), model(_Model) 
-    {}
+    dht() = default;
+    virtual ~dht() = default;
+
+    /*
+     * begin
+     *
+     * Call before reading from the sensor. If possible, checks for the 
+     * connected sensor type and returns the detected model. 
+     * 
+     */
+    virtual dhtmodels begin();
 
     /*
      * read
      *
-     * Update the humidity and temperature of this object from the sensor.
+     * Get the humidity and temperature from the sensor.
      * Returns OK if the update was successful, ERROR_TIMEOUT if it times out
      * waiting for a response from the sensor, or ERROR_CHECKSUM if the
      * calculated checksum doesn't match the checksum provided by the sensor.
+     * 
      */
     ReadStatus read();
 
@@ -94,8 +123,8 @@ public:
      *
      * Gets the last read relative humidity percentage.
      */
-    inline int getHumidity() const {
-        return this->humidity;
+    inline RETURNTYPE getHumidity() const {
+        return humidity;
     }
 
     /*
@@ -103,8 +132,8 @@ public:
      *
      * Gets the last read temperature value in degrees Celsius.
      */
-    inline int getTemperature() const {
-        return this->temperature;
+    inline RETURNTYPE getTemperature() const {
+        return temperature;
     }
 
     /*
@@ -112,36 +141,49 @@ public:
      *
      * Calculate the dew point temperatur Td from current temperatur and humidity
      */
-    float dewPoint() const;
+    RETURNTYPE dewPoint() const;
+
+    /*
+     * get Model type
+     *
+     */
+    inline dhtmodels getModel() const {
+        return model;
+    }
+    /*
+     * set Model type
+     *
+     */
+    virtual dhtmodels setModel(dhtmodels _model)
+    {
+        return (model = _model);
+    }
 
 protected:
     // The last read humidity value
-    int humidity;
+    RETURNTYPE humidity;
 
     // The last read temperature value
-    int temperature;
+    RETURNTYPE temperature;
 
-    // The pin over which we communicate with the sensor
-    // If sensor is a DHT12 we use the I2C Bus and pin will hold the Device ID (default 0x5c)
-    uint8_t pin;
-    
     // the sensor type
     dhtmodels model;
 
-    // raw data
-    uint8_t bits[5];
+    // raw bits
+    uint8_t bits[8];
+
+    virtual ReadStatus _checksum();
 
 private:
-    // private read and store function
-    virtual ReadStatus _readSensor(uint8_t wakeupDelay, uint8_t leadingZeroBits) = 0;
+    virtual ReadStatus _readSensor() = 0;
     virtual ReadStatus _storeData() = 0;
-    virtual ReadStatus _checksum();
 };
 
 /*
  * dht1pin
  *
  * A DHTxx humidity/temperature sensor over 1-wire, xx=11,22,33,44
+ * 
  */
 
 class dht1wire : public dht
@@ -151,31 +193,63 @@ public:
      * Constructs a new object that communicates with a DHTxx sensor
      * over the given pin: DHT11, 22, 33 and 44 can be used that way.
      */
-    dht1wire(uint8_t _pin, dhtmodels _model) : dht(_pin, _model) {}
+    dht1wire(dhtmodels _model, uint8_t _pin) : pin(_pin) 
+    {
+        setModel(_model);
+    }
 private:
-    virtual ReadStatus _readSensor(uint8_t wakeupDelay, uint8_t leadingZeroBits);
+    // The pin over which we communicate with the sensor
+    uint8_t pin;
+    
+    virtual ReadStatus _readSensor();
     virtual ReadStatus _storeData();
 };
 
-
 /*
- * dht12
+ * dhti2c
  *
- * A DHT12 humidity/temperature sensor over I2C
+ * A DHT12 or AM2320 humidity/temperature sensor over I2C
+ * 
  */
 
-class dht12 : public dht
+class dhti2c : public dht
 {
 public:
     /*
-     * Constructs a new object that communicates with a DHT12 sensor
-     * By default the I2C bus adress is 0x5c
+     * Constructs a new object that communicates with a i2c sensor
+     * By default set type NONE to auto-detect by begin()
      */
-    dht12(uint8_t _id = 0x5c);
+    dhti2c(dhtmodels _model = DHTNONE)
+    {
+        setModel(_model);
+    }
+
+    virtual dhtmodels begin();
+    virtual dhtmodels setModel(dhtmodels _model);
 private:
-    virtual ReadStatus _readSensor(uint8_t, uint8_t);
+    // If we use the I2C Bus the Device ID (default 0x5c DHT12 / 0xb8 AM2320)
+    uint8_t id;
+    virtual ReadStatus _readSensor();
     virtual ReadStatus _storeData();
+    virtual ReadStatus _checksum();
 };
 
+/*
+ * a DHT dummy
+ *
+ */
+
+class dhtdummy : public dht
+{
+public:
+   dhtdummy(uint32_t &_dummydata) : dummydata(_dummydata) 
+   {
+       setModel(DHTDUMMY);
+   }
+private:
+    uint32_t &dummydata;
+    virtual ReadStatus _readSensor();
+    virtual ReadStatus _storeData();
+};
 
 #endif
